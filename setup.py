@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="csv-join",
-    version="0.0.3",
+    version="0.0.4",
     description="join csv files in SQL",
     long_description=README,
     long_description_content_type="text/markdown",
