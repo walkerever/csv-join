@@ -7,6 +7,7 @@ import sys
 import string
 import random
 import pandas
+from tabulate import tabulate
 import traceback
 import sqlite3
 
@@ -40,7 +41,7 @@ def _csvjoin_main():
             tbname = "_".join(csvfile.split(".")[:-1])
         _x("loading table {} from {}".format(tbname,csvfile))
         df = pandas.read_csv(os.path.expanduser(csvfile)) 
-        df.to_sql(tbname, con, if_exists=args.tablemode)
+        df.to_sql(tbname, con, if_exists=args.tablemode, index=False)
         con.commit()
 
     def randname(n) :
@@ -90,7 +91,7 @@ def _csvjoin_main():
             pandas.set_option("max_columns",None)
             pandas.set_option("max_rows",None)
             pandas.options.display.width = 0
-            print(df.to_string(index=False),flush=True)
+            print(tabulate(df, showindex=False, headers=df.columns))
 
 def csvjoin_main():
     try :
