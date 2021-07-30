@@ -7,7 +7,7 @@ import sys
 import string
 import random
 import pandas
-from tabulate import tabulate
+from xtable import xtable
 import traceback
 import sqlite3
 
@@ -88,18 +88,15 @@ def _csvjoin_main():
             if df.empty :
                 print("# empty set.",file=sys.stderr,flush=True)
                 return
-            pandas.set_option("max_columns",None)
-            pandas.set_option("max_rows",None)
-            pandas.options.display.width = 0
-            print(tabulate(df, showindex=False, headers=df.columns))
+            print(xtable(data=df.values.tolist(),header=list(df.keys())))
 
 def csvjoin_main():
     try :
         _csvjoin_main()
     except :
-        exitinfo = traceback.format_exc().splitlines()[-1]
+        exitinfo = traceback.format_exc().splitlines()[-1:]
         if "SystemExit: 0" not in exitinfo :
-            print(exitinfo,file=sys.stderr,flush=True)
+            print("\n".join(exitinfo),file=sys.stderr,flush=True)
 
 if __name__ == "__main__":
     csvjoin_main()

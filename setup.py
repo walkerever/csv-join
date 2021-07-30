@@ -21,7 +21,7 @@ setup(
     classifiers=["License :: OSI Approved :: Apache Software License"],
     packages=find_packages(),
     include_package_data=True,
-    install_requires=[ "pandas","tabulate"],
+    install_requires=[ "pandas","xtable"],
     keywords=[ "csv","query","sql","console" ],
     entry_points={ "console_scripts": 
         [ 
