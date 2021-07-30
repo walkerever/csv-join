@@ -20,7 +20,7 @@ def _csvjoin_main():
     parser.add_argument( "-a", "--adhoc", dest="adhoc", action="append", default=list(),help="adhoc DDL/DML such as view full definition.")
     parser.add_argument( "-J", "--json", dest="json", action="store_true", default=False, help="dump result in JSON",)
     parser.add_argument( "-X", "--debug", dest="debug", action="store_true", default=False, help="debug mode",)
-    parser.add_argument( "--table-creation-mode", dest="tablemode", default="replace", help="if_exists{fail,replace,append}, default 'replace'",)
+    parser.add_argument( "--table-creation-mode", dest="tablemode", default="append", help="if_exists{fail,replace,append}, default 'append'",)
     args = parser.parse_args()
     
     def _x(s) :
