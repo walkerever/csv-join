@@ -13,13 +13,16 @@ import sqlite3
 
 def _csvjoin_main():
     parser = argparse.ArgumentParser(description="CSV query in SQL. Yonghang Wang, wyhang@gmail.com, 2021")
-    parser.add_argument( "-t", "--csv", "--table", dest="tables", action="append",default=list(), help="specify csv files. '[alias=]csvfile'")
+    parser.add_argument( "-t", "--table", dest="tables", action="append",default=list(), help="specify csv files. '[alias=]csvfile'")
     parser.add_argument( "-i", "--index", dest="indexes", action="append",default=list(), help="index. tbl(c1,c2,...)")
     parser.add_argument( "-d", "--db", "--database",dest="db", default=":memory:",  help="database name. default in memory.")
     parser.add_argument( "-q", "--sql", "--query",dest="sql", default=None,  help="SQL stmt or file containing sql query")
     parser.add_argument( "-a", "--adhoc", dest="adhoc", action="append", default=list(),help="adhoc DDL/DML such as view full definition.")
-    parser.add_argument( "-J", "--json", dest="json", action="store_true", default=False, help="dump result in JSON",)
     parser.add_argument( "-X", "--debug", dest="debug", action="store_true", default=False, help="debug mode",)
+    parser.add_argument( "--json", dest="json", action="store_true", default=False, help="dump result in JSON",)
+    parser.add_argument( "--csv", dest="csv", action="store_true", default=False, help="dump result in CSV",)
+    parser.add_argument( "--html", dest="html", action="store_true", default=False, help="dump result in HTML",)
+    parser.add_argument( "--markdown", dest="markdown", action="store_true", default=False, help="dump result in Markdown",)
     parser.add_argument( "--table-creation-mode", dest="tablemode", default="append", help="if_exists{fail,replace,append}, default 'append'",)
     args = parser.parse_args()
     
@@ -34,7 +37,7 @@ def _csvjoin_main():
         if "=" in csvfile :
             tbname,csvfile = csvfile.split("=",maxsplit=1)
         else :
-            tbname = csvfile.replace(".csv","").replace(".","_")
+            tbname = "_".join(csvfile.split(".")[:-1])
         _x("loading table {} from {}".format(tbname,csvfile))
         df = pandas.read_csv(os.path.expanduser(csvfile)) 
         df.to_sql(tbname, con, if_exists=args.tablemode)
@@ -42,7 +45,7 @@ def _csvjoin_main():
 
     def randname(n) :
         m = max(n,3)
-        return "_idx_" + "".join([random.choice(string.ascii_lowercase) for _ in range(m)])
+        return "_ix_" + "".join([random.choice(string.ascii_lowercase) for _ in range(m)])
 
     for idx in args.indexes :
         stmt = "create index {} on ".format(randname(5))  + idx
@@ -70,6 +73,16 @@ def _csvjoin_main():
     
         if args.json :
             print(df.to_json(orient="records"),flush=True)
+            return
+        elif args.csv :
+            print(df.to_csv(index=None),flush=True)
+            return
+        elif args.html :
+            print(df.to_html(index=False),flush=True)
+            return
+        elif args.markdown:
+            print(df.to_markdown(index=False),flush=True)
+            return
         else :
             if df.empty :
                 print("# empty set.",file=sys.stderr,flush=True)
@@ -77,8 +90,7 @@ def _csvjoin_main():
             pandas.set_option("max_columns",None)
             pandas.set_option("max_rows",None)
             pandas.options.display.width = 0
-            print(df,flush=True)
-
+            print(df.to_string(index=False),flush=True)
 
 def csvjoin_main():
     try :

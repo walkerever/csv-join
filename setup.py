@@ -10,7 +10,7 @@ README = (HERE / "README.md").read_text()
 # This call to setup() does all the work
 setup(
     name="csv-join",
-    version="1.0.3",
+    version="1.0.4",
     description="join csv files in SQL",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -21,7 +21,7 @@ setup(
     classifiers=["License :: OSI Approved :: Apache Software License"],
     packages=find_packages(),
     include_package_data=True,
-    install_requires=[ "pandas"],
+    install_requires=[ "pandas","tabulate"],
     keywords=[ "csv","query","sql","console" ],
     entry_points={ "console_scripts": 
         [ 
