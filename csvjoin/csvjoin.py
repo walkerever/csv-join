@@ -16,8 +16,9 @@ def _csvjoin_main():
     parser = argparse.ArgumentParser(description="CSV query in SQL. Yonghang Wang, wyhang@gmail.com, 2021")
     parser.add_argument( "-t", "--table", dest="tables", action="append",default=list(), help="specify csv files. '[alias=]csvfile'")
     parser.add_argument( "-i", "--index", dest="indexes", action="append",default=list(), help="index. tbl(c1,c2,...)")
-    parser.add_argument( "-d", "--db", "--database",dest="db", default=":memory:",  help="database name. default in memory.")
+    parser.add_argument( "-d", "--db", "--database","--engine",dest="db", default=":memory:",  help="database name. default sqlite in memory. use full sqlalchedmy url for other dbms.")
     parser.add_argument( "-q", "--sql", "--query",dest="sql", default=None,  help="SQL stmt or file containing sql query")
+    parser.add_argument( "-b", "--delimiter",dest="sep", default=',',  help="csv delimiter")
     parser.add_argument( "-a", "--adhoc", dest="adhoc", action="append", default=list(),help="adhoc DDL/DML such as view full definition.")
     parser.add_argument( "-X", "--debug", dest="debug", action="store_true", default=False, help="debug mode",)
     parser.add_argument( "--json", dest="json", action="store_true", default=False, help="dump result in JSON",)
@@ -40,7 +41,7 @@ def _csvjoin_main():
         else :
             tbname = "_".join(csvfile.split(".")[:-1])
         _x("loading table {} from {}".format(tbname,csvfile))
-        df = pandas.read_csv(os.path.expanduser(csvfile)) 
+        df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.sep) 
         df.to_sql(tbname, con, if_exists=args.tablemode, index=False)
         con.commit()
 
