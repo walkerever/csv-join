@@ -7,6 +7,7 @@ import sys
 import string
 import random
 import pandas
+import re
 from xtable import xtable
 from sqlalchemy import create_engine
 import traceback
@@ -107,8 +108,17 @@ def csvjoin_main():
         if os.path.isfile(sql) :
             _x("loading query from {}".format(sql))
             sql = open(sql,"r").read()
-    
-        _x("run : {}".format(sql))
+        _x("query = {}".format(sql))
+        if not (re.search(r"^\s*select\s+",sql,re.IGNORECASE) or re.search(r"^\s*with\s+",sql,re.IGNORECASE) or re.search(r"^\s*values(\s+|\()",sql,re.IGNORECASE)) :
+            print("# not a valid query : {}".format(sql),file=sys.stderr,flush=True)
+            print("# for non query ddl/dml, use adhoc(-a) option explicitly.",file=sys.stderr,flush=True)
+            if con :
+                con.close()
+            sys.exit(-1)
+
+        if (re.search(r"\bmerge\b",sql,re.IGNORECASE) or re.search(r"\bupdate\b",sql,re.IGNORECASE) or re.search(r"\bdelete\b",sql,re.IGNORECASE) ) :
+            print("# Warn : for data change without resultset, adhoc(-a) is a better option",file=sys.stderr,flush=True)
+
         try :
             df = pandas.read_sql_query(sql, con)
         except :
