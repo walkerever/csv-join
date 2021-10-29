@@ -23,6 +23,7 @@ def csvjoin_main():
     parser.add_argument( "-b", "--delimiter",dest="sep", default=',',  help="csv delimiter")
     parser.add_argument( "-a", "--adhoc", dest="adhoc", action="append", default=list(),help="adhoc DDL/DML such as view full definition.")
     parser.add_argument( "-X", "--debug", dest="debug", action="store_true", default=False, help="debug mode",)
+    parser.add_argument( "--encoding",dest="encoding", default="utf-8",  help="default encoding")
     parser.add_argument( "--json", dest="json", action="store_true", default=False, help="dump result in JSON",)
     parser.add_argument( "--csv", dest="csv", action="store_true", default=False, help="dump result in CSV",)
     parser.add_argument( "--html", dest="html", action="store_true", default=False, help="dump result in HTML",)
@@ -60,7 +61,7 @@ def csvjoin_main():
         else :
             tbname = "_".join(csvfile.split(".")[:-1])
         _x("loading table {} from {}".format(tbname,csvfile))
-        df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.sep) 
+        df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.sep,on_bad_lines="warn",encoding=args.encoding,encoding_errors="ignore") 
         try :
             df.to_sql(tbname, con, if_exists=args.tablemode, index=False)
         except :
