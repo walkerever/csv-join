@@ -29,7 +29,7 @@ def csvjoin_main():
     parser.add_argument( "--html", dest="html", action="store_true", default=False, help="dump result in HTML",)
     parser.add_argument( "--markdown", dest="markdown", action="store_true", default=False, help="dump result in Markdown",)
     parser.add_argument( "--pivot", dest="pivot", action="store_true", default=False, help="pivot the result. better for wide table.",)
-    parser.add_argument( "--table-creation-mode", dest="tablemode", default="append", help="if_exists{fail,replace,append}, default 'append'",)
+    parser.add_argument( "--table-creation-mode", dest="tablemode", default="replace", help="if_exists{fail,replace,append}, default 'replace'",)
     args = parser.parse_args()
     
     def _x(s) :
@@ -90,11 +90,12 @@ def csvjoin_main():
             pass
 
     for vstmt in args.adhoc :
-        if not cur :
-            cur = con.cursor()
         _x(vstmt)
         try :
-            cur.execute(vstmt)
+            if os.path.isfile(vstmt) :
+                _x("loading DDL/DML from {}".format(vstmt))
+                vstmt = open(vstmt,"r").read()
+            con.execute(vstmt)
         except :
             print(traceback.format_exc().splitlines()[-1],file=sys.stderr,flush=True)
             con.close()
