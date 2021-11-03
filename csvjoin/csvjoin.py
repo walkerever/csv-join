@@ -61,7 +61,16 @@ def csvjoin_main():
         else :
             tbname = "_".join(csvfile.split(".")[:-1])
         _x("loading table {} from {}".format(tbname,csvfile))
-        df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.sep,on_bad_lines="warn",encoding=args.encoding,encoding_errors="ignore") 
+        try :
+            df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.sep,encoding=args.encoding) 
+        except :
+            import getpass
+            import time
+            tmpfile="/tmp/csvjoin.tmp.{}.{}.csv".format(getpass.getuser(),int(time.time()))
+            with open(tmpfile,"w",encoding=args.encoding) as fw :
+                with open(os.path.expanduser(csvfile),"r",encoding=args.encoding,errors="ignore") as fr :
+                    fw.write(fr.read())
+            df = pandas.read_csv(tmpfile,sep=args.sep,encoding=args.encoding) 
         try :
             df.to_sql(tbname, con, if_exists=args.tablemode, index=False)
         except :
