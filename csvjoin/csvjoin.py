@@ -74,7 +74,7 @@ def csvjoin_main():
         try :
             df.to_sql(tbname, con, if_exists=args.tablemode, index=False)
         except :
-            print(traceback.format_exc().splitlines()[-1],file=sys.stderr,flush=True)
+            print(traceback.format_exc().splitlines(),file=sys.stderr,flush=True)
             con.close()
             sys.exit(-1)
         try :
