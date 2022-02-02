@@ -20,7 +20,8 @@ def csvjoin_main():
     parser.add_argument( "-i", "--index", dest="indexes", action="append",default=list(), help="index. tbl(c1,c2,...)")
     parser.add_argument( "-d", "--db", "--database","--engine",dest="db", default=":memory:",  help="database name. default sqlite in memory. use full sqlalchedmy url for other dbms.")
     parser.add_argument( "-q", "--sql", "--query",dest="sql", default=None,  help="SQL stmt or file containing sql query")
-    parser.add_argument( "-b", "--delimiter",dest="sep", default=',',  help="csv delimiter")
+    parser.add_argument( "-b", "--csvdelimiter",dest="csvsep", default=',',  help="csv delimiter")
+    parser.add_argument( "-B", "--sqldelimiter",dest="sqlsep", default='@@',  help="sql delimiter in SQL files")
     parser.add_argument( "-a", "--adhoc", dest="adhoc", action="append", default=list(),help="adhoc DDL/DML such as view full definition.")
     parser.add_argument( "-X", "--debug", dest="debug", action="store_true", default=False, help="debug mode",)
     parser.add_argument( "--encoding",dest="encoding", default="utf-8",  help="default encoding")
@@ -32,9 +33,10 @@ def csvjoin_main():
     parser.add_argument( "--table-creation-mode", dest="tablemode", default="replace", help="if_exists{fail,replace,append}, default 'replace'",)
     args = parser.parse_args()
     
-    def _x(s) :
-        if args.debug :
-            print("# "+s,file=sys.stderr,flush=True)
+    def _x(s,debug=args.debug) :
+        if debug :
+            for ln in s.splitlines() :
+                print("# "+ln,file=sys.stderr,flush=True)
 
     def randname(n) :
         m = max(n,3)
@@ -62,7 +64,7 @@ def csvjoin_main():
             tbname = "_".join(csvfile.split(".")[:-1])
         _x("loading table {} from {}".format(tbname,csvfile))
         try :
-            df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.sep,encoding=args.encoding) 
+            df = pandas.read_csv(os.path.expanduser(csvfile),sep=args.csvsep,encoding=args.encoding) 
         except :
             import getpass
             import time
@@ -70,7 +72,7 @@ def csvjoin_main():
             with open(tmpfile,"w",encoding=args.encoding) as fw :
                 with open(os.path.expanduser(csvfile),"r",encoding=args.encoding,errors="ignore") as fr :
                     fw.write(fr.read())
-            df = pandas.read_csv(tmpfile,sep=args.sep,encoding=args.encoding) 
+            df = pandas.read_csv(tmpfile,sep=args.csvsep,encoding=args.encoding) 
         try :
             df.to_sql(tbname, con, if_exists=args.tablemode, index=False)
         except :
@@ -103,8 +105,17 @@ def csvjoin_main():
         try :
             if os.path.isfile(vstmt) :
                 _x("loading DDL/DML from {}".format(vstmt))
-                vstmt = open(vstmt,"r").read()
-            con.execute(vstmt)
+                sqlstmt = open(vstmt,"r").read()
+                with open(sqlstmt,"r") as f :
+                    processed_sql = ""
+                    for ln in f.readlines() :
+                        if re.search(r"^\s*\-\-",ln):
+                            continue
+                        processed_sql += ln
+                    sqlstmt = processed_sql 
+                vstmt = sqlstmt
+            rs = con.execute(vstmt)
+            _x("rows impacted = {}".format(rs.rowcount),debug=True)
         except :
             print(traceback.format_exc().splitlines()[-1],file=sys.stderr,flush=True)
             con.close()
@@ -114,18 +125,23 @@ def csvjoin_main():
         except :
             pass
 
-    if args.sql :
-        sql = args.sql
-        if os.path.isfile(sql) :
-            _x("loading query from {}".format(sql))
-            with open(sql,"r") as f :
+    sqlstmt = args.sql
+    if sqlstmt :
+        if os.path.isfile(sqlstmt) :
+            _x("loading query from {}".format(sqlstmt))
+            with open(sqlstmt,"r") as f :
                 processed_sql = ""
                 for ln in f.readlines() :
                     if re.search(r"^\s*\-\-",ln):
                         continue
                     processed_sql += ln
-                sql = processed_sql 
-        _x("query = {}".format(sql))
+                sqlstmt = processed_sql 
+
+    sqlstmt = sqlstmt or ""
+    for sql in sqlstmt.split(args.sqlsep) :
+        if not sql :
+            continue
+        _x("{}".format(sql))
         if not (re.search(r"^\s*select\s+",sql,re.IGNORECASE) or re.search(r"^\s*with\s+",sql,re.IGNORECASE) or re.search(r"^\s*values(\s+|\()",sql,re.IGNORECASE)) :
             print("# not a valid query : {}".format(sql),file=sys.stderr,flush=True)
             print("# for non query ddl/dml, use adhoc(-a) option explicitly.",file=sys.stderr,flush=True)
