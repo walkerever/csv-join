@@ -118,7 +118,13 @@ def csvjoin_main():
         sql = args.sql
         if os.path.isfile(sql) :
             _x("loading query from {}".format(sql))
-            sql = open(sql,"r").read()
+            with open(sql,"r") as f :
+                processed_sql = ""
+                for ln in f.readlines() :
+                    if re.search(r"^\s*\-\-",ln):
+                        continue
+                    processed_sql += ln
+                sql = processed_sql 
         _x("query = {}".format(sql))
         if not (re.search(r"^\s*select\s+",sql,re.IGNORECASE) or re.search(r"^\s*with\s+",sql,re.IGNORECASE) or re.search(r"^\s*values(\s+|\()",sql,re.IGNORECASE)) :
             print("# not a valid query : {}".format(sql),file=sys.stderr,flush=True)
